@@ -1,0 +1,138 @@
+#!/bin/bash
+#set -x
+
+PATH="/bin:/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/usr/local/sbin"
+TERM="vt100"
+export PATH TERM
+
+SUCCESS=0
+ERROR=1
+
+exit_code=${SUCCESS}
+
+hostapd_systemd_template="/etc/default/hostapd-systemd.template"
+hostapd_template="/etc/default/hostapd.template"
+radio_vif_config="/etc/default/radio_vifs"
+wifi_ap_config="/etc/default/wifi_ap_config"
+
+### Set this host up as a WIFI Access Point
+systemctl stop systemd-networkd.socket systemd-networkd networkd-dispatcher systemd-networkd-wait-online > /dev/null 2>&1
+systemctl disable systemd-networkd.socket systemd-networkd networkd-dispatcher systemd-networkd-wait-online > /dev/null 2>&1
+
+# 1 - blank our wired eth devices and add them to the bridge
+if [ ${exit_code} -eq ${SUCCESS} ]; then
+
+    if [ -s "${wifi_ap_config}" ]; then
+        source "${wifi_ap_config}"
+    fi
+
+    wired_eth_devs=$(ifconfig -a | egrep "^(en|eth).*:" | awk -F':' '{print $1}')
+    
+    brctl addbr ${bridge_ifname}  &&
+    brctl stp ${bridge_ifname} on &&
+    
+    for wired_eth_dev in ${wired_eth_devs} ; do
+        ifconfig ${wired_eth_dev} down                &&
+        ifconfig ${wired_eth_dev} up                  &&
+        ifconfig ${wired_eth_dev} 0.0.0.0             &&
+        brctl addif ${bridge_ifname} ${wired_eth_dev}
+        let exit_code=${exit_code}+${?}
+    done
+
+fi
+
+# 2 - Give that bridge an IP
+if [ ${exit_code} -eq ${SUCCESS} ]; then
+    ifconfig ${bridge_ifname} ${bridge_ip}
+    let exit_code=${exit_code}+${?}
+fi
+
+# 3 - Add default route
+if [ ${exit_code} -eq ${SUCCESS} ]; then
+    route add default gw ${bridge_gateway} dev ${bridge_ifname}
+    let exit_code=${exit_code}+${?}
+fi
+
+# 4 - Create radio interface for hostapd if missing
+if [ ${exit_code} -eq ${SUCCESS} ]; then
+    radio_vif_lines=$(egrep -v "^#" "${radio_vif_config}")
+
+    for radio_vif_line in ${radio_vif_lines} ; do
+        iw_pif=$(echo "${radio_vif_line}" | awk -F':' '{print $1}')
+        hostapd_vif=$(echo "${radio_vif_line}" | awk -F':' '{print $2}')
+        ap_bridge=$(echo "${radio_vif_line}" | awk -F':' '{print $3}')
+        ap_ssid=$(echo "${radio_vif_line}" | awk -F':' '{print $4}')
+        ap_hw_mode=$(echo "${radio_vif_line}" | awk -F':' '{print $5}')
+        ap_channel=$(echo "${radio_vif_line}" | awk -F':' '{print $6}')
+	ap_passphrase=$(echo "${radio_vif_line}" | awk -F':' '{print $NF}'| base64 -d)
+        hostapd_service=$(echo "${hostapd_vif}" | sed -e 's|\.||g')
+    
+        let hostapd_vif_check=$(ifconfig -a | egrep -c "^${hostapd_vif}:")
+        
+        if [ ${hostapd_vif_check} -eq 0 ]; then
+        
+            if [ -n "${iw_pif}" ]; then
+                iw phy ${iw_pif} interface add ${hostapd_vif} type managed &&
+                iw dev ${hostapd_vif} set power_save off > /dev/null 2>&1
+                ifconfig ${hostapd_vif} up &&
+		ifconfig ${hostapd_vif} down
+            else
+                false
+            fi
+
+        fi
+
+        if [ ${?} -eq ${SUCCESS} ]; then
+
+            if [ ! -e "/etc/hostapd/hostapd-${hostapd_vif}.conf" -a -e "${hostapd_template}" ]; then
+                sed -e "s|::RADIO_VIF::|${hostapd_vif}|g" -e "s|::AP_BRIDGE::|${ap_bridge}|g" -e "s|::AP_SSID::|${ap_ssid}|g" -e "s|::AP_HW_MODE::|${ap_hw_mode}|g" -e "s|::AP_CHANNEL::|${ap_channel}|g" -e "s|::AP_PASSPHRASE::|${ap_passphrase}|g" "${hostapd_template}" > "/etc/hostapd/hostapd-${hostapd_vif}.conf"
+            fi
+
+        fi
+
+        if [ ${?} -eq ${SUCCESS} ]; then
+
+	    if [ ! -e "/lib/systemd/system/hostapd-${hostapd_service}.service" -a "${hostapd_systemd_template}" ]; then
+                sed -e "s|::HOSTAPD_VIF::|${hostapd_vif}|g" "${hostapd_systemd_template}" > "/lib/systemd/system/hostapd-${hostapd_service}.service" &&
+                systemctl enable hostapd-${hostapd_service} > /dev/null 2>&1
+            fi
+
+        fi
+
+        let exit_code=${exit_code}+${?}
+    done
+
+fi
+
+# 5 - Restart (or start) hostapd
+if [ ${exit_code} -eq ${SUCCESS} ]; then
+    radio_vif_lines=$(egrep -v "^#" "${radio_vif_config}")
+
+    for radio_vif_line in ${radio_vif_lines} ; do
+        hostapd_vif=$(echo "${radio_vif_line}" | awk -F':' '{print $2}')
+        hostapd_service=$(echo "${hostapd_vif}" | sed -e 's|\.||g')
+        hostapd_status=$(systemctl status hostapd-${hostapd_service} | egrep -i "^ *Active:" | awk '{print $2}')
+
+        if [ "${hostapd_status}" != "active" ]; then
+            systemctl restart hostapd-${hostapd_service} 
+        fi
+
+        let exit_code=${exit_code}+${?}
+    done
+
+fi
+
+# 6 - Add hostapd interface to bridge
+#brctl addif ${bridge_ifname} ${hostapd_vif}
+
+# 7 - launch the hostapd watchdog
+if [ ${exit_code} -eq ${SUCCESS} ]; then
+    screen -d -m /usr/local/sbin/hostapd_watchdog.sh
+fi
+
+# 8 - optimize disk IO scheduler 
+if [ -x /usr/local/sbin/io-scheduler.sh ]; then
+    /usr/local/sbin/io-scheduler.sh > /dev/null 2>&1
+fi
+
+exit ${exit_code}
