@@ -157,7 +157,7 @@ this_dir=$(realpath -L $(dirname "${0}"))
 if [ -d "${this_dir}/overlay" ]; then
     overlay_files=$(find "${this_dir}/overlay" -depth -type f 2> /dev/null)
 
-    for overlay_file in ${overlay_file} ; do
+    for overlay_file in ${overlay_files} ; do
         copy_command=""
         target_file=$(basename "${overlay_file}")
 	target_path=$(dirname "${overlay_file}" | sed -e "s|${this_dir}/overlay|g")
