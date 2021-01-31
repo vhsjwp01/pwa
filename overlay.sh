@@ -8,6 +8,47 @@ export TERM PATH
 # VARIABLE REPLACEMENT
 echo
 
+while [ -z "${enable_dns}" ]; do
+    read -p "Do you wish to enable DNS (y/n)?: " enable_dns
+    enable_dns=$(echo "${enable_dns}" | tr '[A-Z]' '[a-z]' | sed -e 's/[^(y|n)]//g')
+
+    case ${enable_dns} in
+
+        y)
+            echo
+
+            while [ -z "${nameserver}" ]; do
+                read -p "Enter the IP address of your nameserver: " nameserver
+            done
+
+            echo
+
+            while [ -z "${custom_search}" ]; do
+                read -p "Do you wish to use a custom search domain (y/n)?: " custom_search
+                custom_search=$(echo "${custom_search}" | tr '[A-Z]' '[a-z]' | sed -e 's/[^(y|n)]//g')
+
+                case ${custom_search} in
+                
+                    y)
+                        echo
+
+                        while [ -z "${search}" ]; do
+                            read -p "Enter the custom search domain: " search
+                        done
+                    
+                    ;; 
+
+                esac
+
+            done
+
+        ;;
+
+    esac
+
+done
+
+
 while [ -z "${bridge_ifname}" ]; do
     read -p "Enter the Ethernet Bridge name: " bridge_ifname
 done
@@ -44,11 +85,11 @@ while [ -z "${generate_ft_eas_key}" ]; do
 
     case ${generate_ft_aes_key} in
 
-        n)
+        y)
             echo
 
             while [ -z "${ft_aes_key}" ]; do
-                read -p "Enter an existing FT AES key: " ft_aes_key
+                read -p "Enter your current FT AES key: " ft_aes_key
             done
 
         ;;
@@ -123,6 +164,14 @@ if [ -d "${this_dir}/overlay" ]; then
 
         # Perform any variable substitution in line
         case ${target_file} in
+
+            resolv.conf)
+
+                if [ "${enable_dns}" = "y" ]; then
+                    copy_command="sed -e \"s|::NAMESERVER::|${name_server}|g\" -e \"s|::SEARCH::|${search}|g\" \"${target_path}/${target_file}\" ; if [ -n \"${search}\" ]; then sed -i -e 's|^#search |search |g' \"${target_path}/${target_file}\" ; fi"
+                fi
+
+            ;;
 
             wifi_ap_config)
                 copy_command="sed -e \"s|::BRIDGE_IFNAME::|${bridge_ifname}|g\" -e \"s|::BRIDGE_IP::|${bridge_ip}|g\" -e \"s|::BRIDGE_GATEWAY::|${bridge_gateway}|g\" -e \"s|::BRIDGE_SUBNET::|${bridge_subnet}|g\" \"${overlay_file}\" \"${target_path}/${target_file}\""

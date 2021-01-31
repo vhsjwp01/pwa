@@ -23,7 +23,7 @@ echo "deb-src http://deb.debian.org/debian ${my_codename}-updates non-free"     
 echo ""                                                                               | sudo tee -a "${non_free_source_list}"
 
 apt update
-apt install -y coreutils make screen curl uuid-runtime hostapd wget rsync ifupdown net-tools jq htop iftop iotop vim bc ethtool bridge-utils wireless-tools firmware-realtek firmware-ralink firmware-iwlwifi 
+apt install -y coreutils git make screen curl uuid-runtime hostapd wget rsync ifupdown net-tools jq htop iftop iotop vim bc ethtool bridge-utils wireless-tools firmware-realtek firmware-ralink firmware-iwlwifi 
 
 # Turn off unwanted things
 # TODO: disable all wpa supplicant processes
@@ -39,7 +39,7 @@ sed -i -e 's|\(GRUB_CMDLINE_LINUX_DEFAULT=".*\)splash\(.*\)$|\1\2|g' /etc/defaul
 update-grub
 
 # uninstall unneeded things
-for i in openresolv dhcpcd5 isc-dhcp-client isc-dhcp-common purge plymouth netplan.io ; do
+for i in openresolv dhcpcd5 isc-dhcp-client isc-dhcp-common plymouth netplan.io ; do
     apt remove -y ${i}
     apt purge -y ${i}
 done
