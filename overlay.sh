@@ -32,43 +32,79 @@ done
 
 echo
 
+while [ -z "${mobility_domain}" ]; do
+    read -p "Enter a 4 digit Mobility Domain for bridge '${bridge_ifname}': " mobility_domain
+done
+
+echo
+
+while [ -z "${generate_ft_eas_key}" ]; do
+    read -p "Do you have an existing Fast Transition AES Key (y/n)?:" generate_ft_aes_key
+    generate_ft_aes_key=$(echo "${generate_ft_aes_key}" | tr '[A-Z]' '[a-z]' | sed -e 's/[^(y|n)]//g')
+
+    case ${generate_ft_aes_key} in
+
+        n)
+            echo
+
+            while [ -z "${ft_aes_key}" ]; do
+                read -p "Enter an existing FT AES key: " ft_aes_key
+            done
+
+        ;;
+
+        *)
+            ft_aes_key=$(hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random | tr '[A-Z]' '[a-z]')
+        ;;
+
+    esac
+
+done
+
+echo
+
 while [ -z "enable_mac_allow_db" ]; do
     read -p "Do you have a MAC allow list database (y/n)?: " enable_mac_allow_db
     enable_mac_allow_db=$(echo "${enable_mac_allow_db}" | tr '[A-Z]' '[a-z]' | sed -e 's/[^(y|n)]//g')
-do
 
-if [ "${enable_mac_allow_db}" = "y" ]; then
-    echo
+    case ${enable_mac_allow_db} in
 
-    while [ -z "${mac_allow_db}" ]; do
-        read -p "Enter the MAC allow DB name: " mac_allow_db
-    done
+        y)
+            echo
 
-    echo
+            while [ -z "${mac_allow_db}" ]; do
+                read -p "Enter the MAC allow DB name: " mac_allow_db
+            done
 
-    while [ -z "${db_host}" ]; do
-        read -p "Enter the DB Hostname for DB '${mac_allow_db}': " db_host
-    done
+            echo
 
-    echo
+            while [ -z "${db_host}" ]; do
+                read -p "Enter the DB Hostname for DB '${mac_allow_db}': " db_host
+            done
 
-    while [ -z "${db_port}" ]; do
-        read -p "Enter the Port Number for DB host '${db_host}': " db_port
-    done
+            echo
 
-    echo
+            while [ -z "${db_port}" ]; do
+                read -p "Enter the Port Number for DB host '${db_host}': " db_port
+            done
 
-    while [ -z "${db_user}" ]; do
-        read -p "Enter the Username with grants to DB '${mac_allow_db}': " db_user
-    done
+            echo
 
-    echo
+            while [ -z "${db_user}" ]; do
+                read -p "Enter the Username with grants to DB '${mac_allow_db}': " db_user
+            done
 
-    while [ -z "${db_password}" ]; do
-        read -p "Enter the Password for DB username '${db_user}': " db_password
-    done
+            echo
 
-fi
+            while [ -z "${db_password}" ]; do
+                read -p "Enter the Password for DB username '${db_user}': " db_password
+            done
+
+        ;;
+
+    esac
+
+done
 
 # Find all files
 this_dir=$(realpath -L $(dirname "${0}"))
