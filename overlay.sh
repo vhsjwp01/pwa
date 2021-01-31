@@ -44,6 +44,10 @@ while [ -z "${enable_dns}" ]; do
 
         ;;
 
+        *)
+            nameserver="8.8.8.8"
+        ;;
+
     esac
 
 done
