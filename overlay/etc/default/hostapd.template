@@ -40,11 +40,16 @@ wpa=2
 wpa_passphrase=::AP_PASSPHRASE::
 
 # Set of accepted key management algorithms
-wpa_key_mgmt=WPA-PSK
+wpa_key_mgmt=WPA-PSK FT-PSK
 
 # Set of accepted cipher suites
-wpa_pairwise=CCMP
+wpa_pairwise=TKIP CCMP
 rsn_pairwise=CCMP
+
+# Enable IEEE 802.11i/RSN/WPA2 pre-authentication. This is used to speed up
+# roaming by pre-authenticating IEEE 802.1X/EAP part of the full RSN
+# authentication and key handshake before actually associating with a new AP.
+rsn_preauth=1
 
 # QoS support
 wmm_enabled=1
@@ -56,13 +61,13 @@ ieee80211n=1
 #ht_capab=[HT40+][SHORT-GI-40][DSSS_CCK-40]
 
 # Enable mac address based ACL filtering
-#macaddr_acl=1
+macaddr_acl=1
 
 # Allowed mac address file
-#accept_mac_file=/etc/hostapd/mac_addresses.allow
+accept_mac_file=/etc/hostapd/mac_addresses.allow
 
 # Denied mac address file
-#deny_mac_file=/etc/hostapd/mac_addresses.deny
+deny_mac_file=/etc/hostapd/mac_addresses.deny
 
 # Set the airtime policy operating mode:
 # 0 = disabled (default)
@@ -97,7 +102,20 @@ ieee80211n=1
 # stations active, that *will* be allowed to exceed its half of the available
 # airtime.
 #airtime_bss_limit=1
+#
 
+# Fast transitioning
+rsn_preauth=1
+rsn_preauth_interfaces=::AP_BRIDGE::
+
+mobility_domain=::MOBILITY_DOMAIN::
+pmk_r1_push=1
+
+nas_identifier=::SHORT_HOSTNAME::-::RADIO_VIF::
+r1_key_holder=::MAC_NO_COLONS::
+
+r0kh=ff:ff:ff:ff:ff:ff * ::FT_AES_KEY::
+r1kh=00:00:00:00:00:00 00:00:00:00:00:00 ::FT_AES_KEY::
 
 # -----------
 # References:

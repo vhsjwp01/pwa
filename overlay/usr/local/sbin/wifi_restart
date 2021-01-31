@@ -1,0 +1,55 @@
+#!/bin/bash
+#set -x
+
+PATH="/bin:/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/usr/local/sbin"
+TERM="vt100"
+export TERM PATH
+
+wifi_restart_config="/etc/default/wifi_restart"
+
+my_dmesg=$(unalias dmesg > /dev/null 2>&1 ; which dmesg 2> /dev/null)
+
+if [ "${1}" = "debug" ]; then
+    my_dmesg="Call Trace:\niwl_\n"
+    debug_start="echo -ne"
+    debug_end="\n"
+fi
+
+if [ -e "${wifi_restart_config}" ]; then
+    source "${wifi_restart_config}"
+    hostapd_services=$(systemctl list-unit-files | egrep "^hostapd\-radio.*enabled" | awk '{print $1}')
+    
+    if [ -n "${hostapd_services}" ]; then
+    
+        for hostapd_service in ${hostapd_services} ; do
+
+            if [ -n "${RESTART_NICS}" ]; then
+                vif_servicename=$(echo "${hostapd_service}" | awk -F'.' '{print $1}' | awk -F'-' '{print $2 "-" $3}')
+                vif_basename=$(echo "${vif_servicename}" | awk -F'-' '{print $1}')
+                vif_frequency=$(echo "scale=1 ; $(echo "${vif_servicename}" | awk -F'-' '{print $2}')/10" | bc)
+                vif_device="${vif_basename}-${vif_frequency}"
+                pif_device=$(iw dev | awk '$1=="Interface"{print $2}' | egrep -A1 "${vif_device}" | tail -1)
+                pif_error_regex=$(for i in ${RESTART_NICS} ; do echo "${i}" ; done | egrep "^${pif_device}:" | awk -F':' '{print $NF}')
+
+                if [ -n "${pif_error_regex}" ]; then
+                    err_count=$(${debug_start} ${my_dmesg} | egrep -A5 "Call Trace:" | egrep -c "${pif_error_regex}")
+
+                    if [ ${err_count} -gt 0 ]; then
+                        ${debug_start} systemctl stop ${hostapd_service} ${debug_end} | logger -t "DMESG WIFI ERRORS"
+                        ${debug_start} sleep 5 ${debug_end}
+                        ${debug_start} systemctl start ${hostapd_service} ${debug_end} | logger -t "DMESG WIFI ERRORS"
+                    fi
+
+                fi
+
+            fi
+
+        done
+    
+    fi
+
+fi
+
+${debug_start} ${my_dmesg} -c > /dev/null 2>&1 ${debug_end}
+
+exit 0

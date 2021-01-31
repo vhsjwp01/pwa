@@ -14,13 +14,28 @@ hostapd_systemd_template="/etc/default/hostapd-systemd.template"
 hostapd_template="/etc/default/hostapd.template"
 radio_vif_config="/etc/default/radio_vifs"
 wifi_ap_config="/etc/default/wifi_ap_config"
+eths_down="/etc/default/eths_down"
 
 ### Set this host up as a WIFI Access Point
-systemctl stop systemd-networkd.socket systemd-networkd networkd-dispatcher systemd-networkd-wait-online > /dev/null 2>&1
-systemctl disable systemd-networkd.socket systemd-networkd networkd-dispatcher systemd-networkd-wait-online > /dev/null 2>&1
+nono_services="                  \
+    systemd-networkd.socket      \
+    systemd-networkd             \
+    networkd-dispatcher          \
+    systemd-networkd-wait-online \
+    systemd-resolved             \
+    network-manager              \
+    networking                   \
+    wpa_supplicant               \
+    hostapd"
+
+for i in ${nono_services} ; do
+    systemctl stop ${i} > /dev/null 2>&1
+    systemctl disable ${i} > /dev/null 2>&1
+done
 
 # 1 - blank our wired eth devices and add them to the bridge
 if [ ${exit_code} -eq ${SUCCESS} ]; then
+    short_hostname=$(hostname | awk -F'.' '{print $1}')
 
     if [ -s "${wifi_ap_config}" ]; then
         source "${wifi_ap_config}"
@@ -70,7 +85,22 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         let hostapd_vif_check=$(ifconfig -a | egrep -c "^${hostapd_vif}:")
         
         if [ ${hostapd_vif_check} -eq 0 ]; then
+
+            # Disable any nics defined in '${eths_down}'
+            if [ -s "${eths_down}" ]; then
+                eths_to_disable=$(ifconfig | egrep $(egrep -v "^#" "${eths_down}") | awk -F':' '{print $1}')
+
+                if [ -n "${eths_to_disable}" ]; then
+
+                    for eth_to_disable in ${eths_to_disable} ; do
+                        ifconfig ${eth_to_disable} down
+                    done
+		    
+                fi
+
+            fi
         
+            # Create virtual nics against the given physical radio
             if [ -n "${iw_pif}" ]; then
                 iw phy ${iw_pif} interface add ${hostapd_vif} type managed &&
                 iw dev ${hostapd_vif} set power_save off > /dev/null 2>&1
@@ -85,7 +115,8 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         if [ ${?} -eq ${SUCCESS} ]; then
 
             if [ ! -e "/etc/hostapd/hostapd-${hostapd_vif}.conf" -a -e "${hostapd_template}" ]; then
-                sed -e "s|::RADIO_VIF::|${hostapd_vif}|g" -e "s|::AP_BRIDGE::|${ap_bridge}|g" -e "s|::AP_SSID::|${ap_ssid}|g" -e "s|::AP_HW_MODE::|${ap_hw_mode}|g" -e "s|::AP_CHANNEL::|${ap_channel}|g" -e "s|::AP_PASSPHRASE::|${ap_passphrase}|g" "${hostapd_template}" > "/etc/hostapd/hostapd-${hostapd_vif}.conf"
+		mac_no_colons=$(ifconfig ${hostapd_vif} | egrep "\bether\b" | awk '{print $2}' | sed -e 's|:||g')
+                sed -e "s|::FT_AES_KEY::|${ft_aes_key}|g" -e "s|::MAC_NO_COLONS::|${mac_no_colons}|g" -e "s|::MOBILITY_DOMAIN::|${mobility_domain}|g" -e "s|::SHORT_HOSTNAME::|${short_hostname}|g" -e "s|::RADIO_VIF::|${hostapd_vif}|g" -e "s|::AP_BRIDGE::|${ap_bridge}|g" -e "s|::AP_SSID::|${ap_ssid}|g" -e "s|::AP_HW_MODE::|${ap_hw_mode}|g" -e "s|::AP_CHANNEL::|${ap_channel}|g" -e "s|::AP_PASSPHRASE::|${ap_passphrase}|g" "${hostapd_template}" > "/etc/hostapd/hostapd-${hostapd_vif}.conf"
             fi
 
         fi

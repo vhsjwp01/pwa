@@ -3,3 +3,7 @@ bridge_ifname="::BRIDGE_IFNAME::"
 bridge_ip="::BRIDGE_IP::"
 bridge_gateway="::BRIDGE_GATEWAY::"
 bridge_subnet="::BRIDGE_SUBNET::"
+# four digit integer
+mobility_domain="::MOBILITY_DOMAIN::"
+# 32 character hex string
+ft_aes_key="::FT_AES_KEY::"

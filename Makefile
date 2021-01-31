@@ -7,12 +7,12 @@ prep:
 	./prep.sh
 
 install:
-	case "${PLATFORM}" in                                          \
-	    Darwin|Linux)                                              \
-	        make prep                                           && \
-	        make overlay                                           \
-	    ;;                                                         \
-	    *)                                                         \
-	        echo "Unknown (and unsupported) platform: ${PLATFORM}" \
-	    ;;                                                         \
-	esac                                                         ; \
+	case "${PLATFORM}" in                                             \
+	    Darwin|Linux)                                                 \
+	        make prep                                              && \
+	        make overlay                                              \
+	    ;;                                                            \
+	    *)                                                            \
+	        echo "Unknown (and unsupported) platform: ${PLATFORM}"    \
+	    ;;                                                            \
+	esac
