@@ -83,7 +83,7 @@ done
 
 echo
 
-while [ -z "${generate_ft_eas_key}" ]; do
+while [ -z "${generate_ft_aes_key}" ]; do
     read -p "Do you have an existing Fast Transition AES Key (y/n)?:" generate_ft_aes_key
     generate_ft_aes_key=$(echo "${generate_ft_aes_key}" | tr '[A-Z]' '[a-z]' | sed -e 's/[^(y|n)]//g')
 
