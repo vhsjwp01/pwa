@@ -84,7 +84,7 @@ done
 echo
 
 while [ -z "${generate_ft_aes_key}" ]; do
-    read -p "Do you have an existing Fast Transition AES Key (y/n)?:" generate_ft_aes_key
+    read -p "Do you have an existing Fast Transition AES Key (y/n)?: " generate_ft_aes_key
     generate_ft_aes_key=$(echo "${generate_ft_aes_key}" | tr '[A-Z]' '[a-z]' | sed -e 's/[^(y|n)]//g')
 
     case ${generate_ft_aes_key} in
@@ -160,7 +160,7 @@ if [ -d "${this_dir}/overlay" ]; then
     for overlay_file in ${overlay_files} ; do
         copy_command=""
         target_file=$(basename "${overlay_file}")
-	target_path=$(dirname "${overlay_file}" | sed -e "s|${this_dir}/overlay|g")
+	target_path=$(dirname "${overlay_file}" | sed -e "s|^${this_dir}/overlay||g")
 
         if [ ! -e "${target_path}" ]; then
             mkdir -p "${target_path}"
