@@ -172,21 +172,21 @@ if [ -d "${this_dir}/overlay" ]; then
             resolv.conf)
 
                 if [ "${enable_dns}" = "y" ]; then
-                    copy_command="sed -e \"s|::NAMESERVER::|${nameserver}|g\" -e \"s|::SEARCH::|${search}|g\" \"${overlay_file}\" > \"${target_path}/${target_file}\" ; if [ -n \"${search}\" ]; then sed -i -e 's|^#search |search |g' \"${target_path}/${target_file}\" ; fi"
+                    copy_command="sed -e 's|::NAMESERVER::|${nameserver}|g' -e 's|::SEARCH::|${search}|g' '${overlay_file}' > '${target_path}/${target_file}' ; if [ -n '${search}' ]; then sed -i -e 's|^#search |search |g' '${target_path}/${target_file}' ; fi"
                 fi
 
             ;;
 
             wifi_ap_config)
-                copy_command="sed -e \"s|::BRIDGE_IFNAME::|${bridge_ifname}|g\" -e \"s|::BRIDGE_IP::|${bridge_ip}|g\" -e \"s|::BRIDGE_GATEWAY::|${bridge_gateway}|g\" -e \"s|::BRIDGE_SUBNET::|${bridge_subnet}|g\" -e \"s|::MOBILITY_DOMAIN::|${mobility_domain}|g\" -e \"s|::FT_AES_KEY::|${ft_aes_key}|g\" \"${overlay_file}\" > \"${target_path}/${target_file}\""
+                copy_command="sed -e 's|::BRIDGE_IFNAME::|${bridge_ifname}|g' -e 's|::BRIDGE_IP::|${bridge_ip}|g' -e 's|::BRIDGE_GATEWAY::|${bridge_gateway}|g' -e 's|::BRIDGE_SUBNET::|${bridge_subnet}|g' -e 's|::MOBILITY_DOMAIN::|${mobility_domain}|g' -e 's|::FT_AES_KEY::|${ft_aes_key}|g' '${overlay_file}' > '${target_path}/${target_file}'"
             ;;
 
             macl_allow_list.conf)
-                copy_command="sed -e \"s|::MAC_ALLOW_DB::|${mac_allow_db}|g\" -e \"s|::DB_HOST::|${db_host}|g\" -e \"s|::DB_PORT::|${db_port}|g\" -e \"s|::DB_USER::|${db_user}|g\" -e \"s|::DB_PASSWORD::|${db_password}|g\" \"${overlay_file}\" > \"${target_path}/${target_file}\""
+                copy_command="sed -e 's|::MAC_ALLOW_DB::|${mac_allow_db}|g' -e 's|::DB_HOST::|${db_host}|g' -e 's|::DB_PORT::|${db_port}|g' -e 's|::DB_USER::|${db_user}|g' -e 's|::DB_PASSWORD::|${db_password}|g' '${overlay_file}' > '${target_path}/${target_file}'"
             ;;
 
             *)
-                copy_command="cp \"${overlay_file}\" \"${target_path}/${target_file}\""
+                copy_command="cp '${overlay_file}' '${target_path}/${target_file}'"
             ;;
 
         esac
@@ -199,7 +199,6 @@ if [ -d "${this_dir}/overlay" ]; then
 
 fi
 
-    
 
 ## NOTES
 #
