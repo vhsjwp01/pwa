@@ -2,7 +2,7 @@
 
 # Install needed things
 apt update
-apt install -y lsb-release
+apt install -y lsb-release sudo
 
 # APT sources to enable
 my_codename=$(lsb_release -cs)
