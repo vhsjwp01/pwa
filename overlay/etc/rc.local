@@ -153,15 +153,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
 fi
 
-# 6 - Add hostapd interface to bridge
-#brctl addif ${bridge_ifname} ${hostapd_vif}
-
-# 7 - launch the hostapd watchdog
-if [ ${exit_code} -eq ${SUCCESS} ]; then
-    screen -d -m /usr/local/sbin/hostapd_watchdog.sh
-fi
-
-# 8 - optimize disk IO scheduler 
+# 6 - optimize disk IO scheduler 
 if [ -x /usr/local/sbin/io-scheduler.sh ]; then
     /usr/local/sbin/io-scheduler.sh > /dev/null 2>&1
 fi

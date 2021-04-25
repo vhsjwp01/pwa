@@ -23,7 +23,7 @@ echo "deb-src http://deb.debian.org/debian ${my_codename}-updates non-free"     
 echo ""                                                                               | sudo tee -a "${non_free_source_list}"
 
 apt update
-apt install -y coreutils git ntp ntpdate iw gnupg gnupg2 gnupg1 make screen curl uuid-runtime hostapd wget rsync ifupdown net-tools jq htop iftop iotop vim bc ethtool bridge-utils wireless-tools firmware-realtek firmware-ralink firmware-iwlwifi 
+apt install -y inxi coreutils git ntp ntpdate iw gnupg gnupg2 gnupg1 make screen curl uuid-runtime hostapd wget rsync ifupdown net-tools jq htop iftop iotop vim bc ethtool bridge-utils wireless-tools firmware-realtek firmware-ralink firmware-iwlwifi 
 
 # Turn off unwanted things
 # TODO: disable all wpa supplicant processes

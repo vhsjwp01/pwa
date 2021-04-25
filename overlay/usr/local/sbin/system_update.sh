@@ -27,6 +27,7 @@ case ${this_os} in
             debian|raspbian|ubuntu)
                 export DEBIAN_FRONTEND="noninteractive"
 
+                apt-get clean           > /dev/null 2>&1 &&
                 apt-get update          > /dev/null 2>&1 &&
                 apt-get upgrade -y      > /dev/null 2>&1 &&
                 apt-get dist-upgrade -y > /dev/null 2>&1
@@ -43,7 +44,7 @@ case ${this_os} in
             rpi-update <<<"y" > /dev/null 2>&1
         fi
 
-        reboot > /dev/null 2>&1
+        #reboot > /dev/null 2>&1
     ;;
 
     *)

@@ -1,1 +1,0 @@
-#RESTART_NICS="::nic_regex:::::error_regex:: "
