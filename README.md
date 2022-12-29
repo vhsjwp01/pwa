@@ -12,3 +12,10 @@ This repo was originally based off of ubuntu 18 / debian buster and it required 
 
 ## Recommended hardware
 - any RALINK USB dongle
+- any compute platform capable of running Ubuntu 22 or Raspbian 11 with Ralink module support
+-- tested and works with:
+--- Intel based boards
+--- Atom based boards
+--- Raspberry Pi boards
+--- Libre boards
+--- Odroid boards
