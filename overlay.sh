@@ -52,7 +52,6 @@ while [ -z "${enable_dns}" ]; do
 
 done
 
-
 while [ -z "${bridge_ifname}" ]; do
     read -p "Enter the Ethernet Bridge name: " bridge_ifname
 done
