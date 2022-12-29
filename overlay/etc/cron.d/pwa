@@ -22,9 +22,6 @@
 # 
 # m h  dom mon dow   command
 #
-# Update wifi allow list (if necessary) every 2 minutes
-*/2 * * * * ( /usr/bin/nice -19 /usr/local/sbin/fetch_allow_list.sh > /dev/null 2>&1 )
-#
 # Run system_update.sh
 45 3 * * 6 ( /usr/local/sbin/system_update.sh 2>&1 | logger -t "Automated System Updates" )
 #
