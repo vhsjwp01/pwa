@@ -64,10 +64,10 @@ ieee80211n=1
 macaddr_acl=1
 
 # Allowed mac address file
-accept_mac_file=/etc/hostapd/mac_addresses.allow
+#accept_mac_file=/etc/hostapd/mac_addresses.allow
 
 # Denied mac address file
-deny_mac_file=/etc/hostapd/mac_addresses.deny
+#deny_mac_file=/etc/hostapd/mac_addresses.deny
 
 # Set the airtime policy operating mode:
 # 0 = disabled (default)
